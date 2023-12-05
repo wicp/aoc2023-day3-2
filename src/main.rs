@@ -50,28 +50,28 @@ fn number_positions(input: &Vec<Vec<char>>) -> Vec<(usize,Vec<(usize,usize)>)> {
 
 fn main() {
     let input = std::fs::read_to_string("./input.txt").expect("Could not read input.txt in current directory");
-    let height = input.lines().count();
-    let width = input.lines().next().and_then(|line| Some(line.len())).unwrap_or(0);
-    let input_array: Vec<Vec<char>> = input.lines().map(|s| s.chars().collect()).collect();
+    let input_array= input.lines().map(|s| s.chars().collect()).collect();
     let numbers = number_positions(&input_array);
-    let mut marked_positions: Vec<(usize, usize)> = vec![];
-    for i in 0..height {
-        for j in 0..width {
-            if !input_array[i][j].is_ascii_digit() && 
-               input_array[i][j] != '.' {
-                   marked_positions.append(&mut adjacent(j,i))
+    let mut marked_positions: Vec<Vec<(usize, usize)>> = vec![];
+    for (i, line) in input_array.into_iter().enumerate() {
+        for (j, character) in line.into_iter().enumerate() {
+            if character == '*' {
+                   marked_positions.push(adjacent(j,i))
             }
         }
     }
-    let included_numbers: Vec<usize> = numbers.iter()
-                                  .filter(|(_,position_list)| 
-                                            !position_list.iter()
-                                                          .filter(|position| marked_positions.contains(position))
-                                                          .collect::<Vec<&(usize,usize)>>()
-                                                          .is_empty()
-                                         )
-                                  .map(|(number,_)| *number)
-                                  .collect();
-    let total: usize = included_numbers.iter().sum();
-    println!("{}",total);
+    let mut total: usize = 0;
+    for mark in marked_positions {
+        let included_numbers: Vec<usize> = numbers.iter()
+                                      .filter(|(_,position_list)| 
+                                                !position_list.iter()
+                                                              .filter(|position| mark.contains(position))
+                                                              .collect::<Vec<&(usize,usize)>>()
+                                                              .is_empty()
+                                             )
+                                      .map(|(number,_)| *number)
+                                      .collect();
+        if included_numbers.len() == 2 { total += included_numbers.into_iter().product::<usize>() }
+    }
+    println!("{:?}",total);
 }
